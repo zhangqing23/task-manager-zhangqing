@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>智能任务管理系统</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,sans-serif}
+body{background:#f4f6f8;padding:30px;max-width:700px;margin:0 auto}
+h1{text-align:center;color:#222;margin-bottom:24px;font-size:24px}
+.box{background:#fff;padding:20px;border-radius:12px;box-shadow:0 2px 10px #00000010;margin-bottom:20px}
+.form-row{display:flex;gap:10px;flex-wrap:wrap}
+#taskInput{flex:1;padding:10px 12px;border:1px solid #ddd;border-radius:8px;font-size:16px;min-width:180px}
+#prioritySelect{padding:10px;border:1px solid #ddd;border-radius:8px;font-size:16px}
+#addBtn{padding:10px 18px;background:#2563eb;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:16px}
+.filter{margin:16px 0;display:flex;gap:8px;flex-wrap:wrap}
+.filter button{padding:7px 12px;border:1px solid #ccc;background:#fff;border-radius:6px;cursor:pointer}
+.filter button.active{background:#2563eb;color:#fff;border-color:#2563eb}
+.task-item{display:flex;align-items:center;justify-content:space-between;padding:14px 12px;border-bottom:1px solid #eee;gap:10px}
+.task-left{display:flex;align-items:center;gap:10px}
+.title{font-size:16px}
+.done{text-decoration:line-through;color:#888}
+.tag{font-size:13px;padding:3px 7px;border-radius:999px}
+.tag-high{background:#fee2e2;color:#dc2626}
+.tag-medium{background:#fff3cd;color:#d97706}
+.tag-low{background:#dcfce7;color:#16a34a}
+.btns button{margin-left:6px;padding:6px 10px;border:none;border-radius:6px;cursor:pointer;font-size:14px}
+.btn-toggle{background:#eef2ff;color:#2563eb}
+.btn-del{background:#fef2f2;color:#dc2626}
+</style>
+</head>
+<body>
+<h1>智能任务管理系统</h1>
+<div class="box">
+  <div class="form-row">
+    <input id="taskInput" placeholder="输入新任务">
+    <select id="prioritySelect">
+      <option value="高">高</option>
+      <option value="中" selected>中</option>
+      <option value="低">低</option>
+    </select>
+    <button id="addBtn">添加任务</button>
+  </div>
+</div>
+
+<div class="box">
+  <div class="filter">
+    <button data-filter="all" class="active">全部</button>
+    <button data-filter="高">高优先级</button>
+    <button data-filter="中">中优先级</button>
+    <button data-filter="低">低优先级</button>
+  </div>
+  <div id="taskList"></div>
+</div>
+
+<script>
+const API_BASE = ""; // Vercel部署后不用改
+let currentFilter = "all";
+
+const taskInput = document.getElementById("taskInput");
+const prioritySelect = document.getElementById("prioritySelect");
+const addBtn = document.getElementById("addBtn");
+const taskList = document.getElementById("taskList");
+const filterBtns = document.querySelectorAll(".filter button");
+
+// 加载任务
+async function loadTasks(){
+  const res = await fetch(`${API_BASE}/api/tasks?priority=${currentFilter}`);
+  const list = await res.json();
+  render(list);
+}
+
+// 渲染
+function render(list){
+  taskList.innerHTML = "";
+  list.forEach(item=>{
+    const div = document.createElement("div");
+    div.className = "task-item";
+    div.innerHTML = `
+      <div class="task-left">
+        <span class="title ${item.is_completed?'done':''}">${item.title}</span>
+        <span class="tag tag-${item.priority==='高'?'high':item.priority==='中'?'medium':'low'}">${item.priority}</span>
+      </div>
+      <div class="btns">
+        <button class="btn-toggle" data-id="${item.id}" data-ok="${item.is_completed}">
+          ${item.is_completed?"未完成":"完成"}
+        </button>
+        <button class="btn-del" data-id="${item.id}">删除</button>
+      </div>
+    `;
+    taskList.appendChild(div);
+  })
+
+  // 切换完成
+  document.querySelectorAll(".btn-toggle").forEach(b=>{
+    b.onclick = async ()=>{
+      const id = b.dataset.id;
+      const ok = b.dataset.ok === "true";
+      await fetch(`${API_BASE}/api/tasks/${id}`,{
+        method:"PUT",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({is_completed:!ok})
+      })
+      loadTasks();
+    }
+  })
+  // 删除
+  document.querySelectorAll(".btn-del").forEach(b=>{
+    b.onclick = async ()=>{
+      if(!confirm("确定删除？"))return;
+      const id = b.dataset.id;
+      await fetch(`${API_BASE}/api/tasks/${id}`,{method:"DELETE"})
+      loadTasks();
+    }
+  })
+}
+
+// 添加
+addBtn.onclick = async ()=>{
+  const title = taskInput.value.trim();
+  const priority = prioritySelect.value;
+  if(!title) return alert("请输入任务内容");
+  await fetch(`${API_BASE}/api/tasks`,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({title,priority})
+  })
+  taskInput.value = "";
+  loadTasks();
+}
+
+// 筛选
+filterBtns.forEach(btn=>{
+  btn.onclick = ()=>{
+    filterBtns.forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active");
+    currentFilter = btn.dataset.filter;
+    loadTasks();
+  }
+})
+
+loadTasks();
+</script>
+</body>
+</html>
