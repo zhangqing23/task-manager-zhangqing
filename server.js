@@ -6,9 +6,12 @@ const app = express();
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
+// =========👉就是这里！两行打印放在这=========
+console.log("SUPABASE_URL =", SUPABASE_URL);
+console.log("SUPABASE_ANON_KEY =", SUPABASE_ANON_KEY);
+// =========================================
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// 直接托管public文件夹里所有静态文件（index.html、css、js）
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use(cors());
