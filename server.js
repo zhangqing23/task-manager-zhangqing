@@ -1,3 +1,8 @@
+const path = require('path');
+app.get('/', (req, res)=>{
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
+
 const express = require('express');
 const { createClient } = require('@supabase/supabase-js');
 const cors = require('cors');
