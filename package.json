@@ -1,12 +1,9 @@
 {
-  "name": "smart-task-manager",
+  "name": "task-manager",
   "version": "1.0.0",
   "dependencies": {
-    "express": "^4.18.3",
-    "@supabase/supabase-js": "^2.39.7",
-    "cors": "^2.8.5"
-  },
-  "scripts": {
-    "start": "node server.js"
+    "@supabase/supabase-js": "^2.33.1",
+    "cors": "^2.8.5",
+    "express": "^4.18.2"
   }
 }
