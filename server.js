@@ -10,6 +10,7 @@ console.log("SUPABASE_URL =", SUPABASE_URL);
 console.log("SUPABASE_ANON_KEY =", SUPABASE_ANON_KEY);
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+// 静态页面，你的index.html放在public文件夹
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(cors());
 app.use(express.json());
@@ -23,51 +24,66 @@ app.get('/api/tasks', async (req, res) => {
       query = query.eq('priority', priority);
     }
     const { data, error } = await query;
-    if (error) return res.status(500).json(error);
+    if (error) {
+      console.error('supabase查询错误：', error);
+      return res.status(500).json(error);
+    }
     res.json(data);
   } catch (e) {
-    console.error(e);
-    res.status(500).json({err: e.message});
+    console.error('接口异常：', e);
+    res.status(500).json({ err: e.message });
   }
 });
+
 // 新增任务
 app.post('/api/tasks', async (req, res) => {
   try {
     const { title, priority } = req.body;
-    if (!title || !priority) return res.status(400).json({msg:'缺少内容'});
+    if (!title || !priority) return res.status(400).json({ msg: '缺少内容' });
     const { data, error } = await supabase.from('tasks').insert([{ title, priority }]).select();
-    if (error) return res.status(500).json(error);
+    if (error) {
+      console.error('supabase插入错误：', error);
+      return res.status(500).json(error);
+    }
     res.json(data[0]);
   } catch (e) {
-    console.error(e);
-    res.status(500).json({err: e.message});
+    console.error('接口异常：', e);
+    res.status(500).json({ err: e.message });
   }
 });
+
 // 切换完成状态
 app.put('/api/tasks/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const { is_completed } = req.body;
     const { data, error } = await supabase.from('tasks').update({ is_completed }).eq('id', id).select();
-    if (error) return res.status(500).json(error);
+    if (error) {
+      console.error('supabase更新错误：', error);
+      return res.status(500).json(error);
+    }
     res.json(data[0]);
   } catch (e) {
-    console.error(e);
-    res.status(500).json({err: e.message});
+    console.error('接口异常：', e);
+    res.status(500).json({ err: e.message });
   }
 });
+
 // 删除任务
 app.delete('/api/tasks/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const { error } = await supabase.from('tasks').delete().eq('id', id);
-    if (error) return res.status(500).json(error);
+    if (error) {
+      console.error('supabase删除错误：', error);
+      return res.status(500).json(error);
+    }
     res.json({ ok: true });
   } catch (e) {
-    console.error(e);
-    res.status(500).json({err: e.message});
+    console.error('接口异常：', e);
+    res.status(500).json({ err: e.message });
   }
 });
 
-// ✅ 重点：不再listen，直接导出app给vercel
+// 重点：Vercel serverless 不要 listen，直接导出app
 module.exports = app;
