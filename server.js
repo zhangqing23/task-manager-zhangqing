@@ -2,15 +2,20 @@ const path = require('path');
 const express = require('express');
 const { createClient } = require('@supabase/supabase-js');
 const cors = require('cors');
+const fetch = require('node-fetch');
+
 const app = express();
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
 console.log("SUPABASE_URL =", SUPABASE_URL);
 console.log("SUPABASE_ANON_KEY =", SUPABASE_ANON_KEY);
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// 静态页面，你的index.html放在public文件夹
+// 重点：手动传入 fetch，修复 fetch failed
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  fetch: fetch
+});
+
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(cors());
 app.use(express.json());
@@ -85,5 +90,4 @@ app.delete('/api/tasks/:id', async (req, res) => {
   }
 });
 
-// 重点：Vercel serverless 不要 listen，直接导出app
 module.exports = app;
