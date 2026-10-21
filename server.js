@@ -4,18 +4,15 @@ const { createClient } = require('@supabase/supabase-js');
 const cors = require('cors');
 const app = express();
 
-// =========这里改成你的========
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
-// =============================
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// 直接托管public文件夹里所有静态文件（index.html、css、js）
+app.use(express.static(path.join(__dirname, 'public')));
 
 app.use(cors());
 app.use(express.json());
-
-app.get('/', (req, res)=>{
-  res.sendFile(path.join(__dirname, 'index.html'));
-});
 
 // 获取任务，支持优先级筛选
 app.get('/api/tasks', async (req, res) => {
