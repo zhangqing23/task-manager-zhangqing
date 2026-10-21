@@ -1,22 +1,21 @@
 const path = require('path');
-app.get('/', (req, res)=>{
-  res.sendFile(path.join(__dirname, 'index.html'));
-});
-
 const express = require('express');
 const { createClient } = require('@supabase/supabase-js');
 const cors = require('cors');
 const app = express();
 
 // =========这里改成你的========
-const SUPABASE_URL = "https://jzuaagddleequbbphcfq.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_E_09IMIwSDtydFnaFPpVsA_XuEgElJm";
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
 // =============================
-
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 app.use(cors());
 app.use(express.json());
+
+app.get('/', (req, res)=>{
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
 
 // 获取任务，支持优先级筛选
 app.get('/api/tasks', async (req, res) => {
@@ -29,7 +28,6 @@ app.get('/api/tasks', async (req, res) => {
   if (error) return res.status(500).json(error);
   res.json(data);
 });
-
 // 新增任务
 app.post('/api/tasks', async (req, res) => {
   const { title, priority } = req.body;
@@ -38,7 +36,6 @@ app.post('/api/tasks', async (req, res) => {
   if (error) return res.status(500).json(error);
   res.json(data[0]);
 });
-
 // 切换完成状态
 app.put('/api/tasks/:id', async (req, res) => {
   const { id } = req.params;
@@ -47,7 +44,6 @@ app.put('/api/tasks/:id', async (req, res) => {
   if (error) return res.status(500).json(error);
   res.json(data[0]);
 });
-
 // 删除任务
 app.delete('/api/tasks/:id', async (req, res) => {
   const { id } = req.params;
